@@ -24,22 +24,106 @@ enum class GPUType {
     Tesla = 3
 };
 
+// Реализация паттерна "Стратегия"
+
+enum class GPUUsageMannerEnum : int
+{
+    Gaming,
+    Rendering,
+    AITraining,
+    None
+};
+
+class GPUUsageStrategy
+{
+public:
+    virtual ~GPUUsageStrategy() {}
+    virtual void UseGPU() = 0;
+};
+
+class GamingUsageStrategy : public GPUUsageStrategy
+{
+public:
+    void UseGPU() override
+    {
+        cout << "Using GPU for high-performance gaming..." << endl;
+    }
+};
+
+class RenderingUsageStrategy : public GPUUsageStrategy
+{
+public:
+    void UseGPU() override
+    {
+        cout << "Using GPU for professional rendering tasks..." << endl;
+    }
+};
+
+class AITrainingUsageStrategy : public GPUUsageStrategy
+{
+public:
+    void UseGPU() override
+    {
+        cout << "Using GPU for AI model training and deep learning..." << endl;
+    }
+};
+
+class MiningUsageStrategy : public GPUUsageStrategy
+{
+public:
+    void UseGPU() override
+    {
+        cout << "Using GPU for cryptocurrency mining..." << endl;
+    }
+};
+
+// Фабричный метод для создания стратегии использования
+
+GPUUsageStrategy* CreateGPUUsageStrategy(GPUUsageMannerEnum usageManner)
+{
+    switch (usageManner)
+    {
+    case GPUUsageMannerEnum::Gaming:
+        return new GamingUsageStrategy;
+    case GPUUsageMannerEnum::Rendering:
+        return new RenderingUsageStrategy;
+    case GPUUsageMannerEnum::AITraining:
+        return new AITrainingUsageStrategy;
+    default:
+        return nullptr;
+    }
+}
+
 // Базовый класс
 
 class GPU {
 private:
     bool isWorking;
     GPU_BodyColor bodyColor;
+    GPUUsageStrategy* usageStrategy; // Добавляем стратегию
 
 protected:
     int memory;
 
+    void DoUseStrategy()
+    {
+        if (usageStrategy != nullptr)
+            usageStrategy->UseGPU();
+        else
+            cout << "No usage strategy defined!\n";
+    }
+
 public:
-    GPU() : memory(rand() % 16 + 4), bodyColor(static_cast<GPU_BodyColor>(rand() % 4)) {
+    GPU() : memory(rand() % 16 + 4), bodyColor(static_cast<GPU_BodyColor>(rand() % 4)), usageStrategy(nullptr)
+    {
         isWorking = static_cast<bool>(rand() % 2);
     }
 
-    virtual ~GPU() {}
+    virtual ~GPU()
+    {
+        if (usageStrategy != nullptr)
+            delete usageStrategy;
+    }
 
     bool IsWorking() const { return isWorking; }
     int GetMemory() const { return memory; }
@@ -47,30 +131,52 @@ public:
     GPU_BodyColor GetBodyColor() const { return bodyColor; }
 
     virtual void Use() = 0;
+
+    void SetUsageStrategy(GPUUsageStrategy* strategy)
+    {
+        if (usageStrategy != nullptr)
+            delete usageStrategy;
+        usageStrategy = strategy;
+    }
 };
 
 class GeForce : public GPU {
 public:
-    GeForce() : GPU() {}
+    GeForce() : GPU()
+    {
+        SetUsageStrategy(CreateGPUUsageStrategy(GPUUsageMannerEnum::Gaming));
+    }
+
     void Use() override
     {
-    if (IsWorking())
-        cout << "Using WORKING GPU... Gaming with GeForce!\n";
-    else
-        cout << "GeForce is broken, can't use it.\n";
+        if (IsWorking())
+        {
+            cout << "Using WORKING GPU... ";
+            DoUseStrategy();
+        }
+        else
+            cout << "GeForce is broken, can't use it.\n";
     }
+
     GPUType GetType() const override { return GPUType::GeForce; }
 };
 
 class Quadro : public GPU {
 public:
-    Quadro() : GPU() {}
+    Quadro() : GPU()
+    {
+        SetUsageStrategy(CreateGPUUsageStrategy(GPUUsageMannerEnum::Rendering));
+    }
+
     void Use() override
     {
-    if (IsWorking())
-        cout << "Using WORKING GPU... Rendering with Quadro!\n";
-    else
-        cout << "Quadro is broken, can't use it.\n";
+        if (IsWorking())
+        {
+            cout << "Using WORKING GPU... ";
+            DoUseStrategy();
+        }
+        else
+            cout << "Quadro is broken, can't use it.\n";
     }
 
     GPUType GetType() const override { return GPUType::Quadro; }
@@ -78,18 +184,24 @@ public:
 
 class Tesla : public GPU {
 public:
-    Tesla() : GPU() {}
+    Tesla() : GPU()
+    {
+        SetUsageStrategy(CreateGPUUsageStrategy(GPUUsageMannerEnum::AITraining));
+    }
+
     void Use() override
     {
-    if (IsWorking())
-        cout << "Using WORKING GPU... Training AI on Tesla!\n";
-    else
-        cout << "Tesla is broken, can't use it.\n";
+        if (IsWorking())
+        {
+            cout << "Using WORKING GPU... ";
+            DoUseStrategy();
+        }
+        else
+            cout << "Tesla is broken, can't use it.\n";
     }
+
     GPUType GetType() const override { return GPUType::Tesla; }
 };
-
-
 
 // Фабричный метод создания видеокарт
 
