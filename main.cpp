@@ -113,6 +113,16 @@ protected:
             cout << "No usage strategy defined!\n";
     }
 
+    virtual void PreUseMessage()
+    {
+        cout << "Using WORKING GPU... ";
+    }
+
+    virtual void PostUseMessage()
+    {
+
+    }
+
 public:
     GPU() : memory(rand() % 16 + 4), bodyColor(static_cast<GPU_BodyColor>(rand() % 4)), usageStrategy(nullptr)
     {
@@ -128,9 +138,23 @@ public:
     bool IsWorking() const { return isWorking; }
     int GetMemory() const { return memory; }
     virtual GPUType GetType() const = 0;
+    virtual const char* GetGPUTypeName() const = 0;
+
     GPU_BodyColor GetBodyColor() const { return bodyColor; }
 
-    virtual void Use() = 0;
+    virtual void Use()
+    {
+        if (IsWorking())
+        {
+            PreUseMessage();
+            DoUseStrategy();
+            PostUseMessage();
+        }
+        else
+        {
+            cout << GetGPUTypeName() << " is broken, can't use it.\n";
+        }
+    }
 
     void SetUsageStrategy(GPUUsageStrategy* strategy)
     {
@@ -142,65 +166,56 @@ public:
 
 class GeForce : public GPU {
 public:
-    GeForce() : GPU()
+    GeForce()
     {
         SetUsageStrategy(CreateGPUUsageStrategy(GPUUsageMannerEnum::Gaming));
     }
 
-    void Use() override
-    {
-        if (IsWorking())
-        {
-            cout << "Using WORKING GPU... ";
-            DoUseStrategy();
-        }
-        else
-            cout << "GeForce is broken, can't use it.\n";
-    }
-
     GPUType GetType() const override { return GPUType::GeForce; }
+
+    const char* GetGPUTypeName() const override { return "GeForce"; }
+
+protected:
+    void PreUseMessage() override
+    {
+        cout << "Using for gaming: ";
+    }
 };
 
 class Quadro : public GPU {
 public:
-    Quadro() : GPU()
+    Quadro()
     {
         SetUsageStrategy(CreateGPUUsageStrategy(GPUUsageMannerEnum::Rendering));
     }
 
-    void Use() override
-    {
-        if (IsWorking())
-        {
-            cout << "Using WORKING GPU... ";
-            DoUseStrategy();
-        }
-        else
-            cout << "Quadro is broken, can't use it.\n";
-    }
-
     GPUType GetType() const override { return GPUType::Quadro; }
+
+    const char* GetGPUTypeName() const override { return "Quadro"; }
+
+protected:
+    void PreUseMessage() override
+    {
+        cout << "Rendering graphics: ";
+    }
 };
 
 class Tesla : public GPU {
 public:
-    Tesla() : GPU()
+    Tesla()
     {
         SetUsageStrategy(CreateGPUUsageStrategy(GPUUsageMannerEnum::AITraining));
     }
 
-    void Use() override
-    {
-        if (IsWorking())
-        {
-            cout << "Using WORKING GPU... ";
-            DoUseStrategy();
-        }
-        else
-            cout << "Tesla is broken, can't use it.\n";
-    }
-
     GPUType GetType() const override { return GPUType::Tesla; }
+
+    const char* GetGPUTypeName() const override { return "Tesla"; }
+
+protected:
+    void PreUseMessage() override
+    {
+        cout << "Training AI models: ";
+    }
 };
 
 // Фабричный метод создания видеокарт
